@@ -66,7 +66,7 @@ async function configureExtension() {
   ]);
   const library = newestLibrary(localStored[LIBRARY_KEY], synced[LIBRARY_KEY], synced.quickReplies);
   await persistLibrary(library);
-  await chrome.sidePanel.setOptions({ path: "sidebar/sidebar.html", enabled: true });
+  await chrome.sidePanel.setOptions({ path: "sidebar.html", enabled: true });
   await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
   try {
     await migrateShortcut();
@@ -93,11 +93,11 @@ async function sendFrameMessage(tabId, frameId, message) {
       await chrome.scripting.executeScript({
         target: { tabId, frameIds: [frameId] },
         world: "MAIN",
-        files: ["content/page-helper.js"]
+        files: ["page-helper.js"]
       });
       await chrome.scripting.executeScript({
         target: { tabId, frameIds: [frameId] },
-        files: ["content/page-helper.js"]
+        files: ["page-helper.js"]
       });
       return await chrome.tabs.sendMessage(tabId, message, { frameId });
     } catch (_injectionError) {
