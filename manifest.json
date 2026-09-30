@@ -1,0 +1,76 @@
+{
+  "manifest_version": 3,
+  "name": "Helpdesk Reply",
+  "version": "1.6.17",
+  "description": "Organize respostas prontas em abas e acesse-as pela barra lateral do Chrome.",
+  "minimum_chrome_version": "122",
+  "icons": {
+    "16": "chrome-reply-16.png",
+    "32": "chrome-reply-32.png",
+    "48": "chrome-reply-48.png",
+    "128": "chrome-reply-128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "webNavigation",
+    "storage",
+    "clipboardWrite",
+    "scripting",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Abrir Helpdesk Reply",
+    "default_icon": {
+      "16": "chrome-reply-16.png",
+      "32": "chrome-reply-32.png",
+      "48": "chrome-reply-48.png",
+      "128": "chrome-reply-128.png"
+    }
+  },
+  "externally_connectable": {
+    "ids": [
+      "jcbmdknjcabhlioenckoekapbeobnofa"
+    ]
+  },
+  "commands": {
+    "toggle-chrome-reply": {
+      "suggested_key": {
+        "default": "Alt+Shift+Q"
+      },
+      "description": "Abrir ou fechar o painel lateral do Helpdesk Reply"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "page-helper.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "page-helper.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ]
+}
