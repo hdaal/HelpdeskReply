@@ -26,18 +26,18 @@ chrome/
 └─ quick-reply/         # Fonte do complemento de inserção rápida
 
 firefox/
-├─ helpdesk-reply/      # Reservado para futura adaptação
-└─ quick-reply/         # Reservado para futura adaptação
+├─ helpdesk-reply/      # Fonte do painel lateral principal
+└─ quick-reply/         # Fonte do complemento de inserção rápida
 ```
 
-Os diretórios `firefox/helpdesk-reply` e `firefox/quick-reply` existem apenas para reservar a futura adaptação; os arquivos desses complementos serão adicionados posteriormente.
+Cada pasta em `firefox/` é a raiz de um complemento independente preparado para o Mozilla Add-ons.
 
 ## Disponibilidade
 
 | Navegador | Helpdesk Reply | Resposta Rápida |
 | --- | --- | --- |
 | Chrome | Disponível na Chrome Web Store | Disponível na Chrome Web Store |
-| Firefox | Estrutura reservada; extensão ainda não publicada | Estrutura reservada; extensão ainda não publicada |
+| Firefox | Pacote pronto para envio ao Mozilla Add-ons | Pacote pronto para envio ao Mozilla Add-ons |
 
 ## Chrome Web Store
 
@@ -48,6 +48,14 @@ Os diretórios `firefox/helpdesk-reply` e `firefox/quick-reply` existem apenas p
 
 Cada pasta em `chrome/` é a raiz de uma extensão independente e contém seu próprio `manifest.json`.
 
+As duas pastas em `firefox/` seguem o mesmo princípio. Para gerar os pacotes de envio, execute:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-firefox-xpi.ps1
+```
+
+Os arquivos resultantes ficam em `dist/helpdesk-reply-1.6.26.xpi` e `dist/helpdesk-reply-quick-reply-1.0.4.xpi`. Para teste local, abra `about:debugging` no Firefox, escolha **Este Firefox**, clique em **Carregar extensão temporária** e selecione o `manifest.json` da pasta correspondente. A instalação permanente requer submissão e assinatura pelo Mozilla Add-ons.
+
 Os fontes versionados são os pacotes de produção e usam os IDs publicados para proteger a comunicação entre as extensões. Para testes locais do fluxo integrado, devem ser usadas variantes de desenvolvimento com IDs compatíveis; essas chaves locais não são incluídas neste repositório nem em pacotes enviados à Store.
 
 Para publicar uma atualização, aumente a versão no manifesto, compacte o conteúdo da pasta da extensão e envie o ZIP para a ficha **existente** correspondente no Chrome Developer Dashboard. Atualizar a ficha existente preserva seu ID e, consequentemente, a integração entre os dois aplicativos.
@@ -56,6 +64,8 @@ Para publicar uma atualização, aumente a versão no manifesto, compacte o cont
 
 - [Política de Privacidade — Helpdesk Reply](chrome/helpdesk-reply/PRIVACY.md)
 - [Política de Privacidade — Resposta Rápida](chrome/quick-reply/PRIVACY.md)
+- [Política de Privacidade — Helpdesk Reply para Firefox](firefox/helpdesk-reply/PRIVACY.md)
+- [Política de Privacidade — Resposta Rápida para Firefox](firefox/quick-reply/PRIVACY.md)
 
 ## Licença
 
