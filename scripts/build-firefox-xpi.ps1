@@ -11,6 +11,47 @@ $packages = @(
   @{ Name = "quick-reply"; File = "helpdesk-reply-quick-reply-1.0.4.xpi" }
 )
 
+Add-Type -AssemblyName System.IO.Compression
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+function New-XpiArchive([string]$source, [string]$destination) {
+  $stream = [System.IO.File]::Open(
+    $destination,
+    [System.IO.FileMode]::Create,
+    [System.IO.FileAccess]::Write,
+    [System.IO.FileShare]::None
+  )
+  try {
+    $archive = [System.IO.Compression.ZipArchive]::new(
+      $stream,
+      [System.IO.Compression.ZipArchiveMode]::Create,
+      $false
+    )
+    try {
+      Get-ChildItem -LiteralPath $source -File -Recurse |
+        Where-Object { $_.Name -ne ".gitkeep" } |
+        Sort-Object FullName |
+        ForEach-Object {
+          $relative = $_.FullName.Substring($source.Length).TrimStart([char[]]"\\/") -replace "\\", "/"
+          $entry = $archive.CreateEntry($relative, [System.IO.Compression.CompressionLevel]::Optimal)
+          $entry.LastWriteTime = [DateTimeOffset]$_.LastWriteTimeUtc
+          $input = [System.IO.File]::OpenRead($_.FullName)
+          $output = $entry.Open()
+          try {
+            $input.CopyTo($output)
+          } finally {
+            $output.Dispose()
+            $input.Dispose()
+          }
+        }
+    } finally {
+      $archive.Dispose()
+    }
+  } finally {
+    $stream.Dispose()
+  }
+}
+
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 
 foreach ($package in $packages) {
@@ -34,11 +75,6 @@ foreach ($package in $packages) {
   if (Test-Path -LiteralPath $destination) {
     Remove-Item -LiteralPath $destination -Force
   }
-  $temporaryZip = "$destination.zip"
-  if (Test-Path -LiteralPath $temporaryZip) {
-    Remove-Item -LiteralPath $temporaryZip -Force
-  }
-  Compress-Archive -Path (Join-Path $source "*") -DestinationPath $temporaryZip -CompressionLevel Optimal
-  Move-Item -LiteralPath $temporaryZip -Destination $destination
+  New-XpiArchive -source $source -destination $destination
   Write-Output "Criado: $destination"
 }

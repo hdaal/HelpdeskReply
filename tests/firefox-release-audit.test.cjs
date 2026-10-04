@@ -53,13 +53,6 @@ test("o empacotador cria dois XPIs com conteúdo ZIP", () => {
   }
 });
 
-test("o empacotador cria ZIP temporário antes de nomear o pacote XPI", () => {
-  const script = fs.readFileSync(path.join(root, "scripts", "build-firefox-xpi.ps1"), "utf8");
-
-  assert.match(script, /temporaryZip/);
-  assert.match(script, /Move-Item.*destination/);
-});
-
 test("o empacotador é determinístico quando os fontes não mudam", () => {
   const packageNames = ["helpdesk-reply-1.6.26.xpi", "helpdesk-reply-quick-reply-1.0.4.xpi"];
   const build = () => childProcess.spawnSync(
@@ -74,4 +67,27 @@ test("o empacotador é determinístico quando os fontes não mudam", () => {
   const secondHashes = packageNames.map((file) => require("node:crypto").createHash("sha256").update(fs.readFileSync(path.join(root, "dist", file))).digest("hex"));
 
   assert.deepEqual(secondHashes, firstHashes);
+});
+
+test("o XPI referencia a sidebar com separadores portáveis", () => {
+  const build = childProcess.spawnSync(
+    "powershell.exe",
+    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ".\\scripts\\build-firefox-xpi.ps1"],
+    { cwd: root, encoding: "utf8" }
+  );
+  assert.equal(build.status, 0, build.stderr || build.stdout);
+
+  const xpi = path.join(root, "dist", "helpdesk-reply-1.6.26.xpi").replace(/\\/g, "\\\\");
+  const command = "Add-Type -AssemblyName System.IO.Compression.FileSystem; $a=[System.IO.Compression.ZipFile]::OpenRead('" + xpi + "'); try {$a.Entries | ForEach-Object {$_.FullName}} finally {$a.Dispose()}";
+  const entries = childProcess.execFileSync("powershell.exe", ["-NoProfile", "-Command", command], { encoding: "utf8" });
+
+  assert.match(entries, /^sidebar\/sidebar\.html$/m);
+  assert.doesNotMatch(entries, /\\/);
+});
+
+test("o empacotador grava os caminhos XPI explicitamente como ZIP portátil", () => {
+  const script = fs.readFileSync(path.join(root, "scripts", "build-firefox-xpi.ps1"), "utf8");
+
+  assert.match(script, /System\.IO\.Compression\.ZipArchive/);
+  assert.doesNotMatch(script, /Compress-Archive/);
 });
