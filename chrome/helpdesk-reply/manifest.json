@@ -1,18 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Helpdesk Reply",
-  "version": "1.6.17",
-  "description": "Organize respostas prontas em abas e acesse-as pela barra lateral do Chrome.",
+  "version": "1.6.26",
+  "description": "Organize respostas prontas em abas, marque uma favorita e insira textos com rapidez.",
   "minimum_chrome_version": "122",
   "icons": {
-    "16": "chrome-reply-16.png",
-    "32": "chrome-reply-32.png",
-    "48": "chrome-reply-48.png",
-    "128": "chrome-reply-128.png"
+    "16": "icons/chrome-reply-16.png",
+    "32": "icons/chrome-reply-32.png",
+    "48": "icons/chrome-reply-48.png",
+    "128": "icons/chrome-reply-128.png"
   },
   "permissions": [
-    "activeTab",
-    "tabs",
     "webNavigation",
     "storage",
     "clipboardWrite",
@@ -28,15 +26,15 @@
   "action": {
     "default_title": "Abrir Helpdesk Reply",
     "default_icon": {
-      "16": "chrome-reply-16.png",
-      "32": "chrome-reply-32.png",
-      "48": "chrome-reply-48.png",
-      "128": "chrome-reply-128.png"
+      "16": "icons/chrome-reply-16.png",
+      "32": "icons/chrome-reply-32.png",
+      "48": "icons/chrome-reply-48.png",
+      "128": "icons/chrome-reply-128.png"
     }
   },
   "externally_connectable": {
     "ids": [
-      "jcbmdknjcabhlioenckoekapbeobnofa"
+      "nkplnopfibilbbkdlfnphjogcojaioch"
     ]
   },
   "commands": {
@@ -48,7 +46,7 @@
     }
   },
   "side_panel": {
-    "default_path": "sidebar.html"
+    "default_path": "sidebar/sidebar.html"
   },
   "content_scripts": [
     {
@@ -56,7 +54,7 @@
         "<all_urls>"
       ],
       "js": [
-        "page-helper.js"
+        "content/page-helper.js"
       ],
       "run_at": "document_start",
       "world": "MAIN",
@@ -67,7 +65,7 @@
         "<all_urls>"
       ],
       "js": [
-        "page-helper.js"
+        "content/page-helper.js"
       ],
       "run_at": "document_start",
       "all_frames": true

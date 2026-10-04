@@ -1,5 +1,22 @@
 const CHROME_REPLY_ID = "kfgfdkkgbehjfddoggbegganlpjkmcmg";
 
+function requestQuickReply() {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(
+      CHROME_REPLY_ID,
+      { type: "chrome-reply:insert-favorite" },
+      (response) => {
+        const error = chrome.runtime.lastError;
+        if (error) {
+          reject(new Error(error.message));
+          return;
+        }
+        resolve(response || { ok: false, error: "O Helpdesk Reply não respondeu à solicitação." });
+      }
+    );
+  });
+}
+
 async function showResult(tabId, result) {
   const ok = Boolean(result?.ok);
   await chrome.action.setBadgeBackgroundColor({ tabId, color: ok ? "#5b3fd6" : "#c93131" });
@@ -16,7 +33,7 @@ async function showResult(tabId, result) {
 
 chrome.action.onClicked.addListener(async (tab) => {
   try {
-    const result = await chrome.runtime.sendMessage(CHROME_REPLY_ID, { type: "chrome-reply:insert-favorite" });
+    const result = await requestQuickReply();
     await showResult(tab.id, result);
   } catch (_error) {
     await showResult(tab.id, { ok: false, error: "Instale e abra o Helpdesk Reply para configurar a resposta rápida." });

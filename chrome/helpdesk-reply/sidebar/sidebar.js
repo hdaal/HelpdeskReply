@@ -18,10 +18,18 @@ const sidePanelPort = chrome.runtime.connect({ name: "chrome-reply-side-panel" }
 chrome.windows.getCurrent().then((windowInfo) => {
   if (Number.isInteger(windowInfo.id)) sidePanelPort.postMessage({ windowId: windowInfo.id });
 }).catch(() => undefined);
+const tabScroller = $("#replyTabs");
+const tabOptions = $("#tabOptions");
+const tabOptionsMenu = $("#tabOptionsMenu");
+const TAB_DRAG_THRESHOLD = 6;
 let toastTimer;
+let favoriteCollapseTimer;
 let draggedIndex = null;
 let dropTargetIndex = null;
 let dropAfter = false;
+let dragOriginBlocked = false;
+let tabDrag = null;
+let suppressTabClickUntil = 0;
 
 function showToast(message) {
   const toast = $("#toast");
@@ -109,16 +117,48 @@ function actionButton(label, action, index, extraClass = "") {
   return button;
 }
 
-function dragHandle(index) {
-  const handle = document.createElement("button");
-  handle.type = "button";
-  handle.className = "drag-handle";
-  handle.draggable = true;
-  handle.dataset.dragIndex = String(index);
-  handle.setAttribute("aria-label", `Arrastar para reordenar resposta ${index + 1}`);
-  handle.title = "Arraste para cima ou para baixo. Use as setas ↑ e ↓ pelo teclado.";
-  handle.textContent = "⠿";
-  return handle;
+function favoriteButton(index, isFavorite) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `favorite-button${isFavorite ? " is-active" : ""}`;
+  button.dataset.action = "favorite";
+  button.dataset.index = String(index);
+  button.setAttribute("aria-pressed", String(isFavorite));
+  button.setAttribute("aria-label", isFavorite ? "Remover dos favoritos" : "Marcar como favorita");
+  button.title = isFavorite ? "Remover dos favoritos" : "Favoritar";
+
+  const star = document.createElement("span");
+  star.className = "favorite-star";
+  star.setAttribute("aria-hidden", "true");
+  star.textContent = isFavorite ? "★" : "☆";
+
+  const label = document.createElement("span");
+  label.className = "favorite-label";
+  label.textContent = "Favorita";
+
+  button.append(star, label);
+  for (const position of ["a", "b", "c"]) {
+    const spark = document.createElement("span");
+    spark.className = `favorite-spark favorite-spark-${position}`;
+    spark.setAttribute("aria-hidden", "true");
+    button.appendChild(spark);
+  }
+  return button;
+}
+
+function isInteractiveDragOrigin(target) {
+  return Boolean(target?.closest("button, textarea, input, label, a, [contenteditable='true']"));
+}
+
+function closeReplyMenus(except = null) {
+  document.querySelectorAll(".reply-menu").forEach((menu) => {
+    if (menu !== except) menu.hidden = true;
+  });
+  document.querySelectorAll('[data-action="menu"]').forEach((button) => {
+    if (button.closest(".reply-card")?.querySelector(".reply-menu") !== except) {
+      button.setAttribute("aria-expanded", "false");
+    }
+  });
 }
 
 function clearDragStyles() {
@@ -127,7 +167,7 @@ function clearDragStyles() {
   });
 }
 
-async function moveReply(fromIndex, toIndex, { focusHandle = false } = {}) {
+async function moveReply(fromIndex, toIndex, { focusCard = false } = {}) {
   if (
     !Number.isInteger(fromIndex) ||
     !Number.isInteger(toIndex) ||
@@ -143,8 +183,8 @@ async function moveReply(fromIndex, toIndex, { focusHandle = false } = {}) {
   await saveReplies();
   renderReplies();
   showToast("Prioridade atualizada.");
-  if (focusHandle) {
-    document.querySelector(`[data-drag-index="${toIndex}"]`)?.focus();
+  if (focusCard) {
+    document.querySelector(`.reply-card[data-index="${toIndex}"]`)?.focus();
   }
 }
 
@@ -159,7 +199,9 @@ function renderReplies() {
     if (tabForReply(text) !== state.activeTabId) return;
     visible += 1;
     const card = document.createElement("article");
-    card.className = "reply-card";
+    const isFavorite = text === state.quickReply;
+    card.className = `reply-card${isFavorite ? " favorite" : ""}`;
+    card.dataset.index = String(index);
 
     if (state.editingIndex === index) {
       const editArea = document.createElement("textarea");
@@ -182,17 +224,30 @@ function renderReplies() {
     paragraph.textContent = text;
     const content = document.createElement("div");
     content.className = "reply-content";
-    content.append(dragHandle(index), paragraph);
+    content.append(paragraph, favoriteButton(index, isFavorite));
     const actions = document.createElement("div");
     actions.className = "reply-actions";
-    actions.append(
-      actionButton("Copiar", "copy", index),
-      actionButton("Inserir", "insert", index),
-      actionButton("Editar", "edit", index),
-      actionButton("Excluir", "remove", index, "danger")
+    const copyButton = actionButton("Copiar", "copy", index);
+    const insertButton = actionButton("Inserir", "insert", index, "primary-action");
+    const actionSpacer = document.createElement("span");
+    actionSpacer.className = "action-spacer";
+    const menuButton = actionButton("•••", "menu", index, "menu-button");
+    menuButton.setAttribute("aria-label", "Mais ações");
+    menuButton.setAttribute("aria-expanded", "false");
+    actions.append(copyButton, actionSpacer, menuButton, insertButton);
+
+    const menu = document.createElement("div");
+    menu.className = "reply-menu";
+    menu.hidden = true;
+    menu.append(
+      actionButton("Editar resposta", "edit", index, "menu-action"),
+      actionButton("Excluir", "remove", index, "menu-action danger")
     );
-    card.dataset.index = String(index);
-    card.append(content, actions);
+
+    card.draggable = true;
+    card.tabIndex = 0;
+    card.setAttribute("aria-label", `Resposta ${index + 1}. Arraste o cartão para reordenar ou use Alt e as setas.`);
+    card.append(content, actions, menu);
     container.appendChild(card);
   });
 
@@ -200,7 +255,7 @@ function renderReplies() {
 }
 
 function renderTabs() {
-  const container = $("#replyTabs");
+  const container = tabScroller;
   container.textContent = "";
   state.tabs.forEach((tab) => {
     const button = document.createElement("button");
@@ -229,16 +284,80 @@ async function copyText(text) {
 }
 
 $("#replySearch").addEventListener("input", renderReplies);
-$("#replyTabs").addEventListener("click", async (event) => {
-  const button = event.target.closest("[data-tab-id]");
-  if (!button) return;
-  state.activeTabId = button.dataset.tabId;
+
+async function activateTab(tabId) {
+  if (!tabId || tabId === state.activeTabId) return;
+  state.activeTabId = tabId;
   await saveTabs();
   renderTabs();
   renderReplies();
+}
+
+function closeTabOptions() {
+  tabOptionsMenu.hidden = true;
+  tabOptions.setAttribute("aria-expanded", "false");
+}
+
+tabOptions.addEventListener("click", () => {
+  const opening = tabOptionsMenu.hidden;
+  tabOptionsMenu.hidden = !opening;
+  tabOptions.setAttribute("aria-expanded", String(opening));
+});
+function finishTabDrag(event) {
+  if (!tabDrag || event.pointerId !== tabDrag.pointerId) return;
+  const drag = tabDrag;
+  tabDrag = null;
+  tabScroller.classList.remove("is-dragging");
+  if (drag.captured && tabScroller.hasPointerCapture(event.pointerId)) tabScroller.releasePointerCapture(event.pointerId);
+  suppressTabClickUntil = Date.now() + 400;
+  if (!drag.moved && drag.startTabId) {
+    activateTab(drag.startTabId);
+  }
+}
+
+tabScroller.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0) return;
+  tabDrag = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startScrollLeft: tabScroller.scrollLeft,
+    startTabId: event.target.closest("[data-tab-id]")?.dataset.tabId || null,
+    moved: false,
+    captured: false
+  };
+});
+
+tabScroller.addEventListener("pointermove", (event) => {
+  if (!tabDrag || event.pointerId !== tabDrag.pointerId) return;
+  const deltaX = event.clientX - tabDrag.startX;
+  if (Math.abs(deltaX) >= TAB_DRAG_THRESHOLD && !tabDrag.moved) {
+    tabDrag.moved = true;
+    tabDrag.captured = true;
+    tabScroller.setPointerCapture(event.pointerId);
+    tabScroller.classList.add("is-dragging");
+  }
+  if (!tabDrag.moved) return;
+  event.preventDefault();
+  tabScroller.scrollLeft = tabDrag.startScrollLeft - deltaX;
+});
+
+tabScroller.addEventListener("pointerup", finishTabDrag);
+tabScroller.addEventListener("pointercancel", finishTabDrag);
+tabScroller.addEventListener("lostpointercapture", finishTabDrag);
+
+tabScroller.addEventListener("click", async (event) => {
+  if (Date.now() < suppressTabClickUntil) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+  const button = event.target.closest("[data-tab-id]");
+  if (!button) return;
+  await activateTab(button.dataset.tabId);
 });
 
 $("#showTabForm").addEventListener("click", () => {
+  closeTabOptions();
   $("#tabForm").classList.toggle("hidden");
   if (!$("#tabForm").classList.contains("hidden")) $("#tabName").focus();
 });
@@ -253,10 +372,13 @@ $("#tabForm").addEventListener("submit", async (event) => {
   state.activeTabId = id;
   await saveTabs();
   event.target.reset(); event.target.classList.add("hidden");
-  renderTabs(); renderReplies(); showToast("Aba criada.");
+  renderTabs(); renderReplies();
+  tabScroller.scrollTo({ left: tabScroller.scrollWidth, behavior: "smooth" });
+  showToast("Aba criada.");
 });
 
 $("#renameTab").addEventListener("click", async () => {
+  closeTabOptions();
   const tab = state.tabs.find((item) => item.id === state.activeTabId);
   if (!tab) return;
   const name = prompt("Nome da aba:", tab.name)?.trim();
@@ -267,6 +389,7 @@ $("#renameTab").addEventListener("click", async () => {
 });
 
 $("#deleteTab").addEventListener("click", async () => {
+  closeTabOptions();
   if (state.tabs.length === 1) return showToast("Mantenha pelo menos uma aba.");
   const tab = state.tabs.find((item) => item.id === state.activeTabId);
   if (!tab || !confirm(`Excluir a aba "${tab.name}"? As respostas serão movidas para outra aba.`)) return;
@@ -278,19 +401,27 @@ $("#deleteTab").addEventListener("click", async () => {
 });
 
 $("#quickReplies").addEventListener("keydown", async (event) => {
-  const handle = event.target.closest("[data-drag-index]");
-  if (!handle || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
+  const card = event.target.closest(".reply-card[data-index]");
+  if (!card || !event.altKey || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
   event.preventDefault();
-  const fromIndex = Number(handle.dataset.dragIndex);
+  const fromIndex = Number(card.dataset.index);
   const toIndex = event.key === "ArrowUp" ? fromIndex - 1 : fromIndex + 1;
-  await moveReply(fromIndex, toIndex, { focusHandle: true });
+  await moveReply(fromIndex, toIndex, { focusCard: true });
+});
+
+$("#quickReplies").addEventListener("pointerdown", (event) => {
+  dragOriginBlocked = isInteractiveDragOrigin(event.target) || Boolean(window.getSelection()?.toString());
 });
 
 $("#quickReplies").addEventListener("dragstart", (event) => {
-  const handle = event.target.closest("[data-drag-index]");
-  if (!handle) return;
-  draggedIndex = Number(handle.dataset.dragIndex);
-  handle.closest(".reply-card")?.classList.add("dragging");
+  const card = event.target.closest(".reply-card[data-index]");
+  if (!card || dragOriginBlocked || isInteractiveDragOrigin(event.target) || window.getSelection()?.toString()) {
+    event.preventDefault();
+    dragOriginBlocked = false;
+    return;
+  }
+  draggedIndex = Number(card.dataset.index);
+  card.classList.add("dragging");
   event.dataTransfer.effectAllowed = "move";
   event.dataTransfer.setData("text/plain", String(draggedIndex));
 });
@@ -328,6 +459,7 @@ $("#quickReplies").addEventListener("dragend", () => {
   draggedIndex = null;
   dropTargetIndex = null;
   dropAfter = false;
+  dragOriginBlocked = false;
   clearDragStyles();
 });
 
@@ -339,11 +471,37 @@ $("#quickReplies").addEventListener("click", async (event) => {
   if (typeof text !== "string") return;
 
   if (button.dataset.action === "copy") {
+    closeReplyMenus();
     await copyText(text);
+  } else if (button.dataset.action === "favorite") {
+    const removingFavorite = state.quickReply === text;
+    state.quickReply = removingFavorite ? "" : text;
+    await saveFavorite();
+    renderReplies();
+    clearTimeout(favoriteCollapseTimer);
+    if (!removingFavorite) {
+      const selectedButton = document.querySelector(`[data-action="favorite"][data-index="${index}"]`);
+      selectedButton?.classList.add("is-expanded", "is-bursting");
+      setTimeout(() => selectedButton?.classList.remove("is-bursting"), 520);
+      favoriteCollapseTimer = setTimeout(() => {
+        selectedButton?.classList.remove("is-expanded");
+      }, 2000);
+      showToast("Resposta favorita salva.");
+    } else {
+      showToast("Resposta removida dos favoritos.");
+    }
   } else if (button.dataset.action === "insert") {
+    closeReplyMenus();
     const result = await chrome.runtime.sendMessage({ type: "chrome-reply:insert-text", text });
     showToast(result?.ok ? "Resposta inserida." : result?.error || "Não foi possível inserir o texto.");
+  } else if (button.dataset.action === "menu") {
+    const menu = button.closest(".reply-card").querySelector(".reply-menu");
+    const opening = menu.hidden;
+    closeReplyMenus(menu);
+    menu.hidden = !opening;
+    button.setAttribute("aria-expanded", String(opening));
   } else if (button.dataset.action === "edit") {
+    closeReplyMenus();
     state.editingIndex = index;
     renderReplies();
   } else if (button.dataset.action === "cancel") {
@@ -357,6 +515,10 @@ $("#quickReplies").addEventListener("click", async (event) => {
     if (previous !== value) {
       state.replyTabs[value] = tabForReply(previous);
       delete state.replyTabs[previous];
+      if (state.quickReply === previous) {
+        state.quickReply = value;
+        await saveFavorite();
+      }
       await saveTabs();
     }
     state.editingIndex = null;
@@ -364,9 +526,14 @@ $("#quickReplies").addEventListener("click", async (event) => {
     renderReplies();
     showToast("Resposta atualizada.");
   } else if (button.dataset.action === "remove") {
+    closeReplyMenus();
     if (!confirm("Excluir esta resposta pronta?")) return;
     state.quickReplies.splice(index, 1);
     delete state.replyTabs[text];
+    if (state.quickReply === text) {
+      state.quickReply = "";
+      await saveFavorite();
+    }
     await saveTabs();
     state.editingIndex = null;
     await saveReplies();
@@ -375,11 +542,9 @@ $("#quickReplies").addEventListener("click", async (event) => {
   }
 });
 
-$("#quickReplyForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  state.quickReply = $("#quickReply").value.trim();
-  await saveFavorite();
-  showToast(state.quickReply ? "Resposta rápida salva." : "Resposta rápida removida.");
+document.addEventListener("click", (event) => {
+  if (!event.target.closest('.reply-menu, [data-action="menu"]')) closeReplyMenus();
+  if (!event.target.closest(".tab-options-wrap")) closeTabOptions();
 });
 
 $("#addReplyForm").addEventListener("submit", async (event) => {
@@ -400,7 +565,7 @@ $("#addReplyForm").addEventListener("submit", async (event) => {
 
 $("#exportBackup").addEventListener("click", () => {
   const backup = {
-    application: "Chrome Reply",
+    application: "Helpdesk Reply",
     formatVersion: 1,
     exportedAt: new Date().toISOString(),
     replies: state.quickReplies,
@@ -412,7 +577,7 @@ $("#exportBackup").addEventListener("click", () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `chrome-reply-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  link.download = `helpdesk-reply-backup-${new Date().toISOString().slice(0, 10)}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   showToast("Backup exportado.");
@@ -424,7 +589,7 @@ $("#importBackup").addEventListener("change", async (event) => {
   if (!file) return;
   try {
     const backup = JSON.parse(await file.text());
-    if (backup.application !== "Chrome Reply" || !Array.isArray(backup.replies)) {
+    if (!["Helpdesk Reply", "Chrome Reply"].includes(backup.application) || !Array.isArray(backup.replies)) {
       throw new Error("Arquivo de backup incompatível.");
     }
     const replies = backup.replies.map((item) => String(item).trim()).filter(Boolean);
@@ -436,7 +601,6 @@ $("#importBackup").addEventListener("change", async (event) => {
     state.quickReply = typeof backup.quickReply === "string"
       ? backup.quickReply.trim()
       : typeof backup.favoriteReply === "string" ? backup.favoriteReply.trim() : "";
-    $("#quickReply").value = state.quickReply;
     state.editingIndex = null;
     await saveReplies();
     await saveFavorite();
@@ -459,7 +623,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
   if ((area === "local" || area === "sync") && changes[FAVORITE_KEY] && typeof changes[FAVORITE_KEY].newValue === "string") {
     state.quickReply = changes[FAVORITE_KEY].newValue;
-    $("#quickReply").value = state.quickReply;
+    renderReplies();
   }
 });
 
@@ -476,8 +640,14 @@ async function init() {
   state.tabs = normalizeTabs(savedTabs);
   state.replyTabs = savedTabs.replyTabs && typeof savedTabs.replyTabs === "object" ? savedTabs.replyTabs : {};
   state.activeTabId = state.tabs.some((tab) => tab.id === savedTabs.activeTabId) ? savedTabs.activeTabId : state.tabs[0].id;
-  $("#quickReply").value = state.quickReply;
-  await chrome.storage.local.set({ [LIBRARY_KEY]: library });
+  if (state.quickReply && !state.quickReplies.includes(state.quickReply)) {
+    state.quickReplies.push(state.quickReply);
+    state.replyTabs[state.quickReply] = state.tabs[0].id;
+    await saveReplies();
+    await saveTabs();
+  } else {
+    await chrome.storage.local.set({ [LIBRARY_KEY]: library });
+  }
   renderReplies();
   renderTabs();
   if (localStored.shortcutUnavailable) {

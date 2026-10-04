@@ -11,7 +11,9 @@ const DEFAULT_REPLIES = [
 
 const LIBRARY_KEY = "replyLibraryV2";
 const FAVORITE_KEY = "favoriteReplyV1";
-const QUICK_BUTTON_EXTENSION_ID = "jcbmdknjcabhlioenckoekapbeobnofa";
+const QUICK_BUTTON_EXTENSION_IDS = [
+  "nkplnopfibilbbkdlfnphjogcojaioch"
+];
 const SYNC_ITEM_SAFE_BYTES = 7500;
 const TOGGLE_COMMAND = "toggle-chrome-reply";
 const OLD_SHORTCUT = "Ctrl+Shift+Y";
@@ -66,7 +68,7 @@ async function configureExtension() {
   ]);
   const library = newestLibrary(localStored[LIBRARY_KEY], synced[LIBRARY_KEY], synced.quickReplies);
   await persistLibrary(library);
-  await chrome.sidePanel.setOptions({ path: "sidebar.html", enabled: true });
+  await chrome.sidePanel.setOptions({ path: "sidebar/sidebar.html", enabled: true });
   await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
   try {
     await migrateShortcut();
@@ -93,11 +95,11 @@ async function sendFrameMessage(tabId, frameId, message) {
       await chrome.scripting.executeScript({
         target: { tabId, frameIds: [frameId] },
         world: "MAIN",
-        files: ["page-helper.js"]
+        files: ["content/page-helper.js"]
       });
       await chrome.scripting.executeScript({
         target: { tabId, frameIds: [frameId] },
-        files: ["page-helper.js"]
+        files: ["content/page-helper.js"]
       });
       return await chrome.tabs.sendMessage(tabId, message, { frameId });
     } catch (_injectionError) {
@@ -116,7 +118,7 @@ async function sendToActiveTab(message) {
   await Promise.all(frames.map(async ({ frameId }) => {
     try {
       const status = await sendFrameMessage(tabId, frameId, { type: "chrome-reply:editable-status" });
-        if (status?.hasTarget || status?.canAutoTarget) candidates.push({ frameId, ...status });
+        if (status?.hasTarget) candidates.push({ frameId, ...status });
     } catch (_error) {
       // Frames protegidos ou sem content script são ignorados.
     }
@@ -138,24 +140,6 @@ async function sendToActiveTab(message) {
       error: "O campo selecionado não pôde ser acessado. Clique nele novamente e tente inserir."
     };
   }
-}
-
-async function sendServiceNowAction(message) {
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tabs[0]?.id) return { ok: false, error: "Nenhuma aba ativa foi encontrada." };
-  const tabId = tabs[0].id;
-  const frames = [...await framesForTab(tabId)]
-    .sort((left, right) => Number(left.frameId) - Number(right.frameId));
-
-  for (const { frameId } of frames) {
-    try {
-      const result = await sendFrameMessage(tabId, frameId, message);
-      if (result && !result.ignored) return result;
-    } catch (_error) {
-      // Frames protegidos ou sem o Chrome Reply são ignorados.
-    }
-  }
-  return { ok: false, error: "Abra uma RITM do ServiceNow e tente novamente." };
 }
 
 async function favoriteReply() {
@@ -205,25 +189,31 @@ chrome.commands.onCommand.addListener((command, tab) => {
   operation.catch(console.error);
 });
 
-chrome.runtime.onMessage.addListener((message) => {
+function sendAsyncResponse(operation, sendResponse) {
+  Promise.resolve(operation).then(
+    (result) => sendResponse(result),
+    (error) => sendResponse({ ok: false, error: error?.message || "Não foi possível concluir a solicitação." })
+  );
+  return true;
+}
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "chrome-reply:insert-text") {
-    return sendToActiveTab({ type: "chrome-reply:insert-text", text: String(message.text || "") });
-  }
-  if (message?.type === "chrome-reply:insert-approval-pending") {
-    return sendServiceNowAction({ type: "chrome-reply:insert-approval-pending" });
+    return sendAsyncResponse(
+      sendToActiveTab({ type: "chrome-reply:insert-text", text: String(message.text || "") }),
+      sendResponse
+    );
   }
   if (message?.type === "chrome-reply:insert-favorite") {
-    return insertFavoriteReply();
+    return sendAsyncResponse(insertFavoriteReply(), sendResponse);
   }
-  if (message?.type === "chrome-reply:get-approval-context") {
-    return sendServiceNowAction({ type: "chrome-reply:get-approval-context" });
-  }
-  return undefined;
+  return false;
 });
 
-chrome.runtime.onMessageExternal.addListener((message, sender) => {
-  if (sender?.id !== QUICK_BUTTON_EXTENSION_ID || message?.type !== "chrome-reply:insert-favorite") {
-    return Promise.resolve({ ok: false, error: "Solicitação externa não autorizada." });
+chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+  if (!QUICK_BUTTON_EXTENSION_IDS.includes(sender?.id) || message?.type !== "chrome-reply:insert-favorite") {
+    sendResponse({ ok: false, error: "Solicitação externa não autorizada." });
+    return false;
   }
-  return insertFavoriteReply();
+  return sendAsyncResponse(insertFavoriteReply(), sendResponse);
 });
