@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "Helpdesk Reply - Resposta Rápida",
+  "version": "1.0.4",
+  "description": "Insere a resposta favorita do Helpdesk Reply sem abrir o painel lateral.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "helpdesk-reply-quick@helpdeskreply.invalid",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": { "required": ["none"] }
+    }
+  },
+  "icons": {
+    "32": "icons/quick-reply.svg",
+    "48": "icons/quick-reply.svg",
+    "96": "icons/quick-reply.svg"
+  },
+  "background": { "scripts": ["background.js"] },
+  "browser_action": {
+    "default_title": "Inserir resposta rápida",
+    "default_icon": "icons/quick-reply.svg"
+  }
+}

@@ -122,3 +122,10 @@ browser.runtime.onMessage.addListener((message) => {
   if (message?.type === "helpdesk-reply:insert-favorite") return insertFavoriteReply();
   return undefined;
 });
+
+browser.runtime.onMessageExternal.addListener((message, sender) => {
+  if (sender.id !== "helpdesk-reply-quick@helpdeskreply.invalid" || message?.type !== "helpdesk-reply:insert-favorite") {
+    return Promise.resolve({ ok: false, error: "Solicitação externa não autorizada." });
+  }
+  return insertFavoriteReply();
+});
