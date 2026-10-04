@@ -59,3 +59,19 @@ test("o empacotador cria ZIP temporário antes de nomear o pacote XPI", () => {
   assert.match(script, /temporaryZip/);
   assert.match(script, /Move-Item.*destination/);
 });
+
+test("o empacotador é determinístico quando os fontes não mudam", () => {
+  const packageNames = ["helpdesk-reply-1.6.26.xpi", "helpdesk-reply-quick-reply-1.0.4.xpi"];
+  const build = () => childProcess.spawnSync(
+    "powershell.exe",
+    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ".\\scripts\\build-firefox-xpi.ps1"],
+    { cwd: root, encoding: "utf8" }
+  );
+
+  assert.equal(build().status, 0);
+  const firstHashes = packageNames.map((file) => require("node:crypto").createHash("sha256").update(fs.readFileSync(path.join(root, "dist", file))).digest("hex"));
+  assert.equal(build().status, 0);
+  const secondHashes = packageNames.map((file) => require("node:crypto").createHash("sha256").update(fs.readFileSync(path.join(root, "dist", file))).digest("hex"));
+
+  assert.deepEqual(secondHashes, firstHashes);
+});
