@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Helpdesk Reply</title>
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <main>
+    <section class="tabs-section" aria-label="Abas de respostas">
+      <div class="tabs-navigation">
+        <div id="replyTabs" class="reply-tabs" role="tablist" aria-label="Temas das respostas"></div>
+      </div>
+      <div class="filter-row">
+        <label class="sr-only" for="replySearch">Filtrar respostas</label>
+        <div class="search-wrap">
+          <input id="replySearch" class="search" type="search" placeholder="Filtrar respostas" autocomplete="off">
+        </div>
+        <div class="tab-options-wrap">
+          <button id="tabOptions" class="tab-options" type="button" aria-label="Opções das abas" aria-expanded="false" title="Opções das abas">☷</button>
+          <div id="tabOptionsMenu" class="tab-options-menu" hidden>
+            <button id="showTabForm" type="button">+ Criar aba</button>
+            <button id="renameTab" type="button">Renomear aba</button>
+            <button id="deleteTab" class="danger-text" type="button">Excluir aba</button>
+          </div>
+        </div>
+      </div>
+      <form id="tabForm" class="tab-form hidden">
+        <label class="sr-only" for="tabName">Nome da nova aba</label>
+        <input id="tabName" maxlength="30" placeholder="Ex.: Acessos" required>
+        <button class="button secondary" type="submit">Criar aba</button>
+      </form>
+    </section>
+
+    <div id="quickReplies" class="reply-list" aria-live="polite"></div>
+    <p id="emptyState" class="empty-state hidden">Nenhuma resposta encontrada.</p>
+
+    <form id="addReplyForm" class="add-reply-form">
+      <label for="newReply">Adicionar resposta</label>
+      <textarea id="newReply" rows="3" maxlength="1000" placeholder="Digite uma nova resposta pronta" required></textarea>
+      <button class="button primary" type="submit">Adicionar</button>
+    </form>
+
+    <section class="backup-section" aria-labelledby="backupTitle">
+      <div>
+        <strong id="backupTitle">Cópia de segurança</strong>
+        <span>Use para transferir ou recuperar respostas em outro perfil.</span>
+      </div>
+      <div class="backup-actions">
+        <button id="exportBackup" class="button secondary" type="button">Exportar backup</button>
+        <label class="button secondary file-button">
+          Restaurar backup
+          <input id="importBackup" type="file" accept="application/json,.json">
+        </label>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+  <footer>Helpdesk Reply <span id="version"></span></footer>
+  <script src="sidebar.js"></script>
+</body>
+</html>
