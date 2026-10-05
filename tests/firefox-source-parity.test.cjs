@@ -6,12 +6,12 @@ const test = require("node:test");
 const root = path.resolve(__dirname, "..");
 const extension = path.join(root, "firefox", "helpdesk-reply");
 
-test("o painel Firefox oferece a biblioteca da versão 1.6.27", () => {
+test("o painel Firefox oferece a biblioteca da versão 1.6.28", () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(extension, "manifest.json"), "utf8"));
   const html = fs.readFileSync(path.join(extension, "sidebar", "sidebar.html"), "utf8");
   const sidebar = fs.readFileSync(path.join(extension, "sidebar", "sidebar.js"), "utf8");
 
-  assert.equal(manifest.version, "1.6.27");
+  assert.equal(manifest.version, "1.6.28");
   assert.equal(manifest.sidebar_action.default_panel, "sidebar/sidebar.html");
   for (const id of ["replyTabs", "replySearch", "quickReplies", "addReplyForm", "exportBackup", "importBackup"]) {
     assert.match(html, new RegExp(`id="${id}"`));

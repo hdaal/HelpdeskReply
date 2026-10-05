@@ -37,7 +37,7 @@ Cada pasta em `firefox/` é a raiz de um complemento independente preparado para
 | Navegador | Helpdesk Reply | Resposta Rápida |
 | --- | --- | --- |
 | Chrome | [Disponível na Chrome Web Store](https://chromewebstore.google.com/detail/kfgfdkkgbehjfddoggbegganlpjkmcmg) | [Disponível na Chrome Web Store](https://chromewebstore.google.com/detail/nkplnopfibilbbkdlfnphjogcojaioch) |
-| Firefox | [Baixar Helpdesk Reply 1.6.27 (.xpi)](dist/helpdesk-reply-1.6.27.xpi) | [Baixar Resposta Rápida 1.0.4 (.xpi)](dist/helpdesk-reply-quick-reply-1.0.4.xpi) |
+| Firefox | [Baixar Helpdesk Reply 1.6.28 (.xpi)](dist/helpdesk-reply-1.6.28.xpi) | [Baixar Resposta Rápida 1.0.5 (.xpi)](dist/helpdesk-reply-quick-reply-1.0.5.xpi) |
 
 ## Chrome Web Store
 
@@ -54,7 +54,7 @@ As duas pastas em `firefox/` seguem o mesmo princípio. Para gerar os pacotes de
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-firefox-xpi.ps1
 ```
 
-Os arquivos resultantes ficam em `dist/helpdesk-reply-1.6.27.xpi` e `dist/helpdesk-reply-quick-reply-1.0.4.xpi`. Para teste local, abra `about:debugging` no Firefox, escolha **Este Firefox**, clique em **Carregar extensão temporária** e selecione o `manifest.json` da pasta correspondente. A instalação permanente requer submissão e assinatura pelo Mozilla Add-ons.
+Os arquivos resultantes ficam em `dist/helpdesk-reply-1.6.28.xpi` e `dist/helpdesk-reply-quick-reply-1.0.5.xpi`. Para teste local, abra `about:debugging` no Firefox, escolha **Este Firefox**, clique em **Carregar extensão temporária** e selecione o `manifest.json` da pasta correspondente. A instalação permanente requer submissão e assinatura pelo Mozilla Add-ons.
 
 O guia completo de uso, publicação e versões do Firefox está em [firefox/README.md](firefox/README.md).
 

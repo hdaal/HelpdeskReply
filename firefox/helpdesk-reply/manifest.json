@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Helpdesk Reply",
-  "version": "1.6.27",
+  "version": "1.6.28",
   "description": "Organize respostas prontas em abas, marque uma favorita e insira textos com rapidez.",
   "browser_specific_settings": {
     "gecko": {

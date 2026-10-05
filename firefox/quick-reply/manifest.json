@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Helpdesk Reply - Resposta Rápida",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Insere a resposta favorita do Helpdesk Reply sem abrir o painel lateral.",
   "browser_specific_settings": {
     "gecko": {

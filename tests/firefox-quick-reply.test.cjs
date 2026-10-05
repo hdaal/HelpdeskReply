@@ -10,7 +10,7 @@ test("Resposta Rápida preserva os IDs registrados no AMO", () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "quick-reply", "manifest.json"), "utf8"));
   const background = fs.readFileSync(path.join(root, "quick-reply", "background.js"), "utf8");
 
-  assert.equal(manifest.version, "1.0.4");
+  assert.equal(manifest.version, "1.0.5");
   assert.equal(mainManifest.browser_specific_settings.gecko.id, "firefox-reply@local");
   assert.equal(manifest.browser_specific_settings.gecko.id, "firefox-reply-quick@local");
   assert.match(background, /browser\.runtime\.sendMessage\("firefox-reply@local"/);

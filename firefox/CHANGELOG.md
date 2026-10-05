@@ -1,5 +1,13 @@
 # Histórico de versões — Firefox
 
+## Helpdesk Reply 1.6.28
+
+- Atualização de versão sem alterações de funcionalidade.
+
+## Resposta Rápida 1.0.5
+
+- Atualização de versão sem alterações de funcionalidade.
+
 ## Helpdesk Reply 1.6.27
 
 - O botão da barra e o atalho agora alternam corretamente entre abrir e fechar o painel lateral.

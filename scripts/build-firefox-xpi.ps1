@@ -7,8 +7,8 @@ $root = Resolve-Path (Join-Path $PSScriptRoot "..")
 $output = [System.IO.Path]::GetFullPath($OutputDirectory)
 $forbidden = @("ser" + "vice" + "now", "gra" + "nado", "gra" + "nadoprod", "ser" + "vice")
 $packages = @(
-  @{ Name = "helpdesk-reply"; File = "helpdesk-reply-1.6.27.xpi" },
-  @{ Name = "quick-reply"; File = "helpdesk-reply-quick-reply-1.0.4.xpi" }
+  @{ Name = "helpdesk-reply"; File = "helpdesk-reply-1.6.28.xpi" },
+  @{ Name = "quick-reply"; File = "helpdesk-reply-quick-reply-1.0.5.xpi" }
 )
 
 Add-Type -AssemblyName System.IO.Compression
