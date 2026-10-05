@@ -4,8 +4,10 @@ Esta pasta contém dois complementos independentes para Firefox Desktop:
 
 | Complemento | Versão | Pacote |
 | --- | --- | --- |
-| Helpdesk Reply | 1.6.27 | `../dist/helpdesk-reply-1.6.27.xpi` |
-| Helpdesk Reply — Resposta Rápida | 1.0.4 | `../dist/helpdesk-reply-quick-reply-1.0.4.xpi` |
+| Helpdesk Reply | 1.6.27 | [Baixar XPI](../dist/helpdesk-reply-1.6.27.xpi) |
+| Helpdesk Reply — Resposta Rápida | 1.0.4 | [Baixar XPI](../dist/helpdesk-reply-quick-reply-1.0.4.xpi) |
+
+Os pacotes acima correspondem exatamente às fontes presentes nesta pasta. Para usar as duas ferramentas juntas, instale ambos os complementos.
 
 ## Uso
 

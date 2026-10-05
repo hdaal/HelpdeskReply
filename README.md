@@ -36,8 +36,8 @@ Cada pasta em `firefox/` é a raiz de um complemento independente preparado para
 
 | Navegador | Helpdesk Reply | Resposta Rápida |
 | --- | --- | --- |
-| Chrome | Disponível na Chrome Web Store | Disponível na Chrome Web Store |
-| Firefox | Pacote pronto para envio ao Mozilla Add-ons | Pacote pronto para envio ao Mozilla Add-ons |
+| Chrome | [Disponível na Chrome Web Store](https://chromewebstore.google.com/detail/kfgfdkkgbehjfddoggbegganlpjkmcmg) | [Disponível na Chrome Web Store](https://chromewebstore.google.com/detail/nkplnopfibilbbkdlfnphjogcojaioch) |
+| Firefox | [Baixar Helpdesk Reply 1.6.27 (.xpi)](dist/helpdesk-reply-1.6.27.xpi) | [Baixar Resposta Rápida 1.0.4 (.xpi)](dist/helpdesk-reply-quick-reply-1.0.4.xpi) |
 
 ## Chrome Web Store
 
