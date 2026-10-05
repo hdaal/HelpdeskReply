@@ -21,3 +21,11 @@ test("o helper insere em controles, conteúdo editável e recusa alvo inválido"
   assert.match(helper, /Clique primeiro no campo de texto/);
   assert.match(helper, /shadowRoot/);
 });
+
+test("a consulta de status não muda o histórico de foco dos frames", () => {
+  const helper = fs.readFileSync(path.join(root, "content", "page-helper.js"), "utf8");
+
+  assert.match(helper, /function statusEditableTarget\(\)/);
+  assert.match(helper, /const target = statusEditableTarget\(\);/);
+  assert.doesNotMatch(helper, /editable-status[\s\S]{0,200}findEditableTarget\(\)/);
+});

@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
   "name": "Helpdesk Reply",
-  "version": "1.6.26",
+  "version": "1.6.27",
   "description": "Organize respostas prontas em abas, marque uma favorita e insira textos com rapidez.",
   "browser_specific_settings": {
     "gecko": {
-      "id": "helpdesk-reply@helpdeskreply.invalid",
+      "id": "firefox-reply@local",
       "strict_min_version": "142.0",
       "data_collection_permissions": { "required": ["none"] }
     }

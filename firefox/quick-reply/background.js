@@ -1,5 +1,5 @@
 async function requestQuickReply() {
-  return browser.runtime.sendMessage("helpdesk-reply@helpdeskreply.invalid", { type: "helpdesk-reply:insert-favorite" });
+  return browser.runtime.sendMessage("firefox-reply@local", { type: "helpdesk-reply:insert-favorite" });
 }
 
 async function showResult(tabId, result) {

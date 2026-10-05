@@ -16,7 +16,7 @@ O projeto reúne dois aplicativos complementares:
 3. Clique em um campo de texto de qualquer página compatível.
 4. Clique no ícone do **Resposta Rápida**: ele solicita ao Helpdesk Reply a inserção da favorita no campo selecionado.
 
-As extensões se comunicam somente entre si, usando os IDs publicados na Chrome Web Store. As respostas ficam no armazenamento do navegador; não há servidor próprio nem envio de conteúdo para terceiros.
+As extensões se comunicam somente entre si, usando os IDs estáveis definidos para cada navegador. As respostas ficam no armazenamento do navegador; não há servidor próprio nem envio de conteúdo para terceiros.
 
 ## Estrutura do repositório
 
@@ -54,7 +54,9 @@ As duas pastas em `firefox/` seguem o mesmo princípio. Para gerar os pacotes de
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-firefox-xpi.ps1
 ```
 
-Os arquivos resultantes ficam em `dist/helpdesk-reply-1.6.26.xpi` e `dist/helpdesk-reply-quick-reply-1.0.4.xpi`. Para teste local, abra `about:debugging` no Firefox, escolha **Este Firefox**, clique em **Carregar extensão temporária** e selecione o `manifest.json` da pasta correspondente. A instalação permanente requer submissão e assinatura pelo Mozilla Add-ons.
+Os arquivos resultantes ficam em `dist/helpdesk-reply-1.6.27.xpi` e `dist/helpdesk-reply-quick-reply-1.0.4.xpi`. Para teste local, abra `about:debugging` no Firefox, escolha **Este Firefox**, clique em **Carregar extensão temporária** e selecione o `manifest.json` da pasta correspondente. A instalação permanente requer submissão e assinatura pelo Mozilla Add-ons.
+
+O guia completo de uso, publicação e versões do Firefox está em [firefox/README.md](firefox/README.md).
 
 Os fontes versionados são os pacotes de produção e usam os IDs publicados para proteger a comunicação entre as extensões. Para testes locais do fluxo integrado, devem ser usadas variantes de desenvolvimento com IDs compatíveis; essas chaves locais não são incluídas neste repositório nem em pacotes enviados à Store.
 

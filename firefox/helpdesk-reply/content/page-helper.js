@@ -70,6 +70,13 @@ function findEditableTarget() {
   return null;
 }
 
+function statusEditableTarget() {
+  const active = deepActiveEditable();
+  if (active) return active;
+  if (isEditableTarget(lastEditableTarget) && isVisible(lastEditableTarget)) return lastEditableTarget;
+  return null;
+}
+
 function saveContentEditableRange() {
   if (!lastEditableTarget?.isContentEditable) return;
   const selection = window.getSelection();
@@ -221,7 +228,7 @@ async function insertReplyText(text) {
 
 async function handleChromeReplyMessage(message) {
   if (message?.type === "helpdesk-reply:editable-status") {
-    const target = findEditableTarget();
+    const target = statusEditableTarget();
     return {
       ok: true,
       hasTarget: Boolean(target),

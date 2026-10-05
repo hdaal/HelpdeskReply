@@ -109,11 +109,15 @@ async function insertFavoriteReply() {
   return sendToActiveTab({ type: "helpdesk-reply:insert-text", text });
 }
 
+function toggleSidebar() {
+  return browser.sidebarAction.toggle();
+}
+
 browser.runtime.onInstalled.addListener(() => configureExtension().catch(console.error));
 browser.runtime.onStartup.addListener(() => configureExtension().catch(console.error));
-browser.browserAction.onClicked.addListener(() => browser.sidebarAction.open().catch(console.error));
+browser.browserAction.onClicked.addListener(() => toggleSidebar().catch(console.error));
 browser.commands.onCommand.addListener((command) => {
-  if (command === TOGGLE_COMMAND) browser.sidebarAction.open().catch(console.error);
+  if (command === TOGGLE_COMMAND) toggleSidebar().catch(console.error);
 });
 browser.runtime.onMessage.addListener((message) => {
   if (message?.type === "helpdesk-reply:insert-text") {
@@ -124,7 +128,7 @@ browser.runtime.onMessage.addListener((message) => {
 });
 
 browser.runtime.onMessageExternal.addListener((message, sender) => {
-  if (sender.id !== "helpdesk-reply-quick@helpdeskreply.invalid" || message?.type !== "helpdesk-reply:insert-favorite") {
+  if (sender.id !== "firefox-reply-quick@local" || message?.type !== "helpdesk-reply:insert-favorite") {
     return Promise.resolve({ ok: false, error: "Solicitação externa não autorizada." });
   }
   return insertFavoriteReply();

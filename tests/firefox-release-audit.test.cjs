@@ -34,7 +34,7 @@ test("cada complemento inclui sua política de privacidade neutra", () => {
 });
 
 test("o empacotador cria dois XPIs com conteúdo ZIP", () => {
-  const packageNames = ["helpdesk-reply-1.6.26.xpi", "helpdesk-reply-quick-reply-1.0.4.xpi"];
+  const packageNames = ["helpdesk-reply-1.6.27.xpi", "helpdesk-reply-quick-reply-1.0.4.xpi"];
   for (const file of packageNames) {
     fs.rmSync(path.join(root, "dist", file), { force: true });
   }
@@ -45,7 +45,7 @@ test("o empacotador cria dois XPIs com conteúdo ZIP", () => {
   );
 
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  assert.match(result.stdout, /Criado: .*helpdesk-reply-1\.6\.26\.xpi/);
+  assert.match(result.stdout, /Criado: .*helpdesk-reply-1\.6\.27\.xpi/);
   assert.match(result.stdout, /Criado: .*helpdesk-reply-quick-reply-1\.0\.4\.xpi/);
   for (const file of packageNames) {
     const bytes = fs.readFileSync(path.join(root, "dist", file));
@@ -54,7 +54,7 @@ test("o empacotador cria dois XPIs com conteúdo ZIP", () => {
 });
 
 test("o empacotador é determinístico quando os fontes não mudam", () => {
-  const packageNames = ["helpdesk-reply-1.6.26.xpi", "helpdesk-reply-quick-reply-1.0.4.xpi"];
+  const packageNames = ["helpdesk-reply-1.6.27.xpi", "helpdesk-reply-quick-reply-1.0.4.xpi"];
   const build = () => childProcess.spawnSync(
     "powershell.exe",
     ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ".\\scripts\\build-firefox-xpi.ps1"],
@@ -77,7 +77,7 @@ test("o XPI referencia a sidebar com separadores portáveis", () => {
   );
   assert.equal(build.status, 0, build.stderr || build.stdout);
 
-  const xpi = path.join(root, "dist", "helpdesk-reply-1.6.26.xpi").replace(/\\/g, "\\\\");
+  const xpi = path.join(root, "dist", "helpdesk-reply-1.6.27.xpi").replace(/\\/g, "\\\\");
   const command = "Add-Type -AssemblyName System.IO.Compression.FileSystem; $a=[System.IO.Compression.ZipFile]::OpenRead('" + xpi + "'); try {$a.Entries | ForEach-Object {$_.FullName}} finally {$a.Dispose()}";
   const entries = childProcess.execFileSync("powershell.exe", ["-NoProfile", "-Command", command], { encoding: "utf8" });
 
