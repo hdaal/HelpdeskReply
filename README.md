@@ -21,23 +21,26 @@ As extensões se comunicam somente entre si, usando os IDs estáveis definidos p
 ## Estrutura do repositório
 
 ```text
-chrome/
-├─ helpdesk-reply/      # Fonte do painel lateral principal
-└─ quick-reply/         # Fonte do complemento de inserção rápida
-
-firefox/
-├─ helpdesk-reply/      # Fonte do painel lateral principal
-└─ quick-reply/         # Fonte do complemento de inserção rápida
+HelpdeskReply/
+├─ README.md
+├─ LICENSE
+├─ .gitignore
+├─ chrome/
+│  ├─ helpdesk-reply/
+│  └─ quick-reply/
+└─ firefox/
+   ├─ helpdesk-reply/
+   └─ quick-reply/
 ```
 
-Cada pasta em `firefox/` é a raiz de um complemento independente preparado para o Mozilla Add-ons.
+Cada pasta de navegador é a raiz de um complemento independente. O repositório contém somente as fontes atuais; os pacotes de publicação são gerados localmente e enviados ao respectivo catálogo de extensões.
 
 ## Disponibilidade
 
 | Navegador | Helpdesk Reply | Resposta Rápida |
 | --- | --- | --- |
 | Chrome | [Disponível na Chrome Web Store](https://chromewebstore.google.com/detail/kfgfdkkgbehjfddoggbegganlpjkmcmg) | [Disponível na Chrome Web Store](https://chromewebstore.google.com/detail/nkplnopfibilbbkdlfnphjogcojaioch) |
-| Firefox | [Baixar Helpdesk Reply 1.6.28 (.xpi)](dist/helpdesk-reply-1.6.28.xpi) | [Baixar Resposta Rápida 1.0.5 (.xpi)](dist/helpdesk-reply-quick-reply-1.0.5.xpi) |
+| Firefox | Disponível no Mozilla Add-ons | Disponível no Mozilla Add-ons |
 
 ## Chrome Web Store
 
@@ -46,17 +49,11 @@ Cada pasta em `firefox/` é a raiz de um complemento independente preparado para
 
 ## Desenvolvimento e publicação
 
-Cada pasta em `chrome/` é a raiz de uma extensão independente e contém seu próprio `manifest.json`.
+Cada pasta em `chrome/` e `firefox/` é a raiz de uma extensão independente e contém seu próprio `manifest.json`.
 
-As duas pastas em `firefox/` seguem o mesmo princípio. Para gerar os pacotes de envio, execute:
+Para teste local no Firefox, abra `about:debugging`, escolha **Este Firefox**, clique em **Carregar extensão temporária** e selecione o `manifest.json` da pasta correspondente. Para publicar, compacte o conteúdo da pasta do complemento e envie o pacote para a ficha existente no Mozilla Add-ons.
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-firefox-xpi.ps1
-```
-
-Os arquivos resultantes ficam em `dist/helpdesk-reply-1.6.28.xpi` e `dist/helpdesk-reply-quick-reply-1.0.5.xpi`. Para teste local, abra `about:debugging` no Firefox, escolha **Este Firefox**, clique em **Carregar extensão temporária** e selecione o `manifest.json` da pasta correspondente. A instalação permanente requer submissão e assinatura pelo Mozilla Add-ons.
-
-O guia completo de uso, publicação e versões do Firefox está em [firefox/README.md](firefox/README.md).
+Os XPIs não são armazenados no repositório. Em cada publicação, gere e envie somente o pacote da versão atual.
 
 Os fontes versionados são os pacotes de produção e usam os IDs publicados para proteger a comunicação entre as extensões. Para testes locais do fluxo integrado, devem ser usadas variantes de desenvolvimento com IDs compatíveis; essas chaves locais não são incluídas neste repositório nem em pacotes enviados à Store.
 
