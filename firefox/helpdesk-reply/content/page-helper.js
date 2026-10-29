@@ -10,6 +10,7 @@ const EDITABLE_SELECTOR = [
   "input[type='email']",
   "input[type='url']",
   "input[type='tel']",
+  "input[type='password']",
   "input:not([type])",
   "[contenteditable='true']",
   "[contenteditable='plaintext-only']"
@@ -26,7 +27,6 @@ function isTextControl(element) {
 function isEditableTarget(element) {
   if (!(element instanceof Element) || !element.matches(EDITABLE_SELECTOR)) return false;
   if (!element.isConnected || element.matches(":disabled, [readonly], [aria-disabled='true']")) return false;
-  if (element.tagName === "INPUT" && element.type === "password") return false;
   return isTextControl(element) || element.isContentEditable;
 }
 
